@@ -28,7 +28,7 @@
 #import <unistd.h>
 
 
-#if 0
+#if GROWLHELPERAPP
 
 // Logging Enabled - See log level below
 
@@ -36,7 +36,7 @@
 // http://code.google.com/p/cocoalumberjack/
 // 
 // It allows us to do a lot of logging without significantly slowing down the code.
-#import "DDLog.h"
+#import "Lumberjack/Lumberjack.h"
 
 #define LogAsync   YES
 #define LogContext 65535
@@ -817,7 +817,17 @@ enum GCDAsyncSocketConfig
 {
 	if((self = [super init]))
 	{
-		delegate = aDelegate;
+#if GROWLHELPERAPP
+        DDFileLogger *fileLogger = [[DDFileLogger alloc] init];
+        
+        fileLogger.maximumFileSize = 1024 * 1024 * 50;  //  50 MB
+        fileLogger.rollingFrequency = 60*60;       // hour
+        
+        //fileLogger.logFileManager.maximumNumberOfLogFiles = 4;
+        
+        [DDLog addLogger:fileLogger];
+#endif
+        delegate = aDelegate;
 		
 		if (dq)
 		{
