@@ -1339,15 +1339,13 @@ enum GCDAsyncSocketConfig
 	
 	// Create dispatch block and run on socketQueue
 	
-	dispatch_block_t block = ^{
-		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	dispatch_block_t block = ^{ @autoreleasepool {
 		
 		if (delegate == nil) // Must have delegate set
 		{
 			NSString *msg = @"Attempting to accept without a delegate. Set a delegate first.";
 			err = [[self badConfigError:msg] retain];
 			
-			[pool drain];
 			return_from_block;
 		}
 		
@@ -1356,7 +1354,6 @@ enum GCDAsyncSocketConfig
 			NSString *msg = @"Attempting to accept without a delegate queue. Set a delegate queue first.";
 			err = [[self badConfigError:msg] retain];
 			
-			[pool drain];
 			return_from_block;
 		}
 		
@@ -1368,7 +1365,6 @@ enum GCDAsyncSocketConfig
 			NSString *msg = @"Both IPv4 and IPv6 have been disabled. Must enable at least one protocol first.";
 			err = [[self badConfigError:msg] retain];
 			
-			[pool drain];
 			return_from_block;
 		}
 		
@@ -1377,7 +1373,6 @@ enum GCDAsyncSocketConfig
 			NSString *msg = @"Attempting to accept while connected or accepting connections. Disconnect first.";
 			err = [[self badConfigError:msg] retain];
 			
-			[pool drain];
 			return_from_block;
 		}
 		
@@ -1397,7 +1392,6 @@ enum GCDAsyncSocketConfig
 			NSString *msg = @"Unknown interface. Specify valid interface by name (e.g. \"en1\") or IP address.";
 			err = [[self badParamError:msg] retain];
 			
-			[pool drain];
 			return_from_block;
 		}
 		
@@ -1406,7 +1400,6 @@ enum GCDAsyncSocketConfig
 			NSString *msg = @"IPv4 has been disabled and specified interface doesn't support IPv6.";
 			err = [[self badParamError:msg] retain];
 			
-			[pool drain];
 			return_from_block;
 		}
 		
@@ -1415,7 +1408,6 @@ enum GCDAsyncSocketConfig
 			NSString *msg = @"IPv6 has been disabled and specified interface doesn't support IPv4.";
 			err = [[self badParamError:msg] retain];
 			
-			[pool drain];
 			return_from_block;
 		}
 		
@@ -1431,7 +1423,6 @@ enum GCDAsyncSocketConfig
 			
 			if (socket4FD == SOCKET_NULL)
 			{
-				[pool drain];
 				return_from_block;
 			}
 		}
@@ -1458,7 +1449,6 @@ enum GCDAsyncSocketConfig
 					close(socket4FD);
 				}
 				
-				[pool drain];
 				return_from_block;
 			}
 		}
@@ -1472,8 +1462,7 @@ enum GCDAsyncSocketConfig
 			int socketFD = socket4FD;
 			dispatch_source_t acceptSource = accept4Source;
 			
-			dispatch_source_set_event_handler(accept4Source, ^{
-				NSAutoreleasePool *eventPool = [[NSAutoreleasePool alloc] init];
+			dispatch_source_set_event_handler(accept4Source, ^{ @autoreleasepool {
 				
 				LogVerbose(@"event4Block");
 				
@@ -1483,9 +1472,7 @@ enum GCDAsyncSocketConfig
 				LogVerbose(@"numPendingConnections: %lu", numPendingConnections);
 				
 				while ([self doAccept:socketFD] && (++i < numPendingConnections));
-				
-				[eventPool drain];
-			});
+			}});
 			
 			dispatch_source_set_cancel_handler(accept4Source, ^{
 				
@@ -1507,8 +1494,7 @@ enum GCDAsyncSocketConfig
 			int socketFD = socket6FD;
 			dispatch_source_t acceptSource = accept6Source;
 			
-			dispatch_source_set_event_handler(accept6Source, ^{
-				NSAutoreleasePool *eventPool = [[NSAutoreleasePool alloc] init];
+			dispatch_source_set_event_handler(accept6Source, ^{ @autoreleasepool {
 				
 				LogVerbose(@"event6Block");
 				
@@ -1518,9 +1504,7 @@ enum GCDAsyncSocketConfig
 				LogVerbose(@"numPendingConnections: %lu", numPendingConnections);
 				
 				while ([self doAccept:socketFD] && (++i < numPendingConnections));
-				
-				[eventPool drain];
-			});
+			}});
 			
 			dispatch_source_set_cancel_handler(accept6Source, ^{
 				
@@ -1538,8 +1522,7 @@ enum GCDAsyncSocketConfig
 		flags |= kSocketStarted;
 		
 		result = YES;
-		[pool drain];
-	};
+	}};
 	
 	if (dispatch_get_current_queue() == socketQueue)
 		block();
@@ -1622,8 +1605,7 @@ enum GCDAsyncSocketConfig
 	{
 		id theDelegate = delegate;
 		
-		dispatch_async(delegateQueue, ^{
-			NSAutoreleasePool *delegatePool = [[NSAutoreleasePool alloc] init];
+		dispatch_async(delegateQueue, ^{ @autoreleasepool {
 			
 			// Query delegate for custom socket queue
 			
@@ -1650,13 +1632,10 @@ enum GCDAsyncSocketConfig
 			
 			// Setup read and write sources for accepted socket
 			
-			dispatch_async(acceptedSocket->socketQueue, ^{
-				NSAutoreleasePool *socketPool = [[NSAutoreleasePool alloc] init];
+			dispatch_async(acceptedSocket->socketQueue, ^{ @autoreleasepool {
 				
 				[acceptedSocket setupReadAndWriteSourcesForNewlyConnectedSocket:childSocketFD];
-				
-				[socketPool drain];
-			});
+			}});
 			
 			// Notify delegate
 			
@@ -1671,9 +1650,7 @@ enum GCDAsyncSocketConfig
 			
 			// Release the accepted socket (it should have been retained by the delegate)
 			[acceptedSocket release];
-			
-			[delegatePool drain];
-		});
+		}});
 	}
 	
 	return YES;
@@ -1811,8 +1788,7 @@ enum GCDAsyncSocketConfig
 	__block BOOL result = NO;
 	__block NSError *err = nil;
 	
-	dispatch_block_t block = ^{
-		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	dispatch_block_t block = ^{ @autoreleasepool {
 		
 		// Check for problems with host parameter
 		
@@ -1821,7 +1797,6 @@ enum GCDAsyncSocketConfig
 			NSString *msg = @"Invalid host parameter (nil or \"\"). Should be a domain name or IP address string.";
 			err = [[self badParamError:msg] retain];
 			
-			[pool drain];
 			return_from_block;
 		}
 		
@@ -1830,7 +1805,6 @@ enum GCDAsyncSocketConfig
 		if (![self preConnectWithInterface:interface error:&err])
 		{
 			[err retain];
-			[pool drain];
 			return_from_block;
 		}
 		
@@ -1849,19 +1823,15 @@ enum GCDAsyncSocketConfig
 		NSString *hostCpy = [[host copy] autorelease];
 		
 		dispatch_queue_t globalConcurrentQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-		dispatch_async(globalConcurrentQueue, ^{
-			NSAutoreleasePool *lookupPool = [[NSAutoreleasePool alloc] init];
+		dispatch_async(globalConcurrentQueue, ^{ @autoreleasepool {
 			
 			[self lookup:aConnectIndex host:hostCpy port:port];
-			
-			[lookupPool drain];
-		});
+		}});
 		
 		[self startConnectTimeout:timeout];
 		
 		result = YES;
-		[pool drain];
-	};
+	}};
 	
 	if (dispatch_get_current_queue() == socketQueue)
 		block();
@@ -1903,8 +1873,7 @@ enum GCDAsyncSocketConfig
 	__block BOOL result = NO;
 	__block NSError *err = nil;
 	
-	dispatch_block_t block = ^{
-		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	dispatch_block_t block = ^{ @autoreleasepool {
 		
 		// Check for problems with remoteAddr parameter
 		
@@ -1936,7 +1905,6 @@ enum GCDAsyncSocketConfig
 			NSString *msg = @"A valid IPv4 or IPv6 address was not given";
 			err = [[self badParamError:msg] retain];
 			
-			[pool drain];
 			return_from_block;
 		}
 		
@@ -1948,7 +1916,6 @@ enum GCDAsyncSocketConfig
 			NSString *msg = @"IPv4 has been disabled and an IPv4 address was passed.";
 			err = [[self badParamError:msg] retain];
 			
-			[pool drain];
 			return_from_block;
 		}
 		
@@ -1957,7 +1924,6 @@ enum GCDAsyncSocketConfig
 			NSString *msg = @"IPv6 has been disabled and an IPv6 address was passed.";
 			err = [[self badParamError:msg] retain];
 			
-			[pool drain];
 			return_from_block;
 		}
 		
@@ -1966,7 +1932,6 @@ enum GCDAsyncSocketConfig
 		if (![self preConnectWithInterface:interface error:&err])
 		{
 			[err retain];
-			[pool drain];
 			return_from_block;
 		}
 		
@@ -1976,7 +1941,6 @@ enum GCDAsyncSocketConfig
 		if (![self connectWithAddress4:address4 address6:address6 error:&err])
 		{
 			[err retain];
-			[pool drain];
 			return_from_block;
 		}
 		
@@ -1985,8 +1949,7 @@ enum GCDAsyncSocketConfig
 		[self startConnectTimeout:timeout];
 		
 		result = YES;
-		[pool drain];
-	};
+	}};
 	
 	if (dispatch_get_current_queue() == socketQueue)
 		block();
@@ -2085,19 +2048,17 @@ enum GCDAsyncSocketConfig
 	
 	if (error)
 	{
-		dispatch_async(socketQueue, ^{
-			NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+		dispatch_async(socketQueue, ^{ @autoreleasepool {
+			
 			[self lookup:aConnectIndex didFail:error];
-			[pool drain];
-		});
+		}});
 	}
 	else
 	{
-		dispatch_async(socketQueue, ^{
-			NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+		dispatch_async(socketQueue, ^{ @autoreleasepool {
+			
 			[self lookup:aConnectIndex didSucceedWithAddress4:address4 address6:address6];
-			[pool drain];
-		});
+		}});
 	}
 }
 
@@ -2262,21 +2223,19 @@ enum GCDAsyncSocketConfig
 		int result = connect(socketFD, (const struct sockaddr *)[address bytes], (socklen_t)[address length]);
 		if (result == 0)
 		{
-			dispatch_async(socketQueue, ^{
-				NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+			dispatch_async(socketQueue, ^{ @autoreleasepool {
+				
 				[self didConnect:aConnectIndex];
-				[pool drain];
-			});
+			}});
 		}
 		else
 		{
 			NSError *error = [self errnoErrorWithReason:@"Error in connect() function"];
 			
-			dispatch_async(socketQueue, ^{
-				NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+			dispatch_async(socketQueue, ^{ @autoreleasepool {
+				
 				[self didNotConnect:aConnectIndex error:error];
-				[pool drain];
-			});
+			}});
 		}
 	});
 	
@@ -2371,21 +2330,15 @@ enum GCDAsyncSocketConfig
 		
 		id theDelegate = delegate;
 		
-		dispatch_async(delegateQueue, ^{
-			NSAutoreleasePool *delegatePool = [[NSAutoreleasePool alloc] init];
+		dispatch_async(delegateQueue, ^{ @autoreleasepool {
 			
 			[theDelegate socket:self didConnectToHost:host port:port];
 			
-			dispatch_async(socketQueue, ^{
-				NSAutoreleasePool *callbackPool = [[NSAutoreleasePool alloc] init];
+			dispatch_async(socketQueue, ^{ @autoreleasepool {
 				
 				SetupStreamsPart2();
-				
-				[callbackPool drain];
-			});
-			
-			[delegatePool drain];
-		});
+			}});
+		}});
 	}
 	else
 	{
@@ -2449,13 +2402,10 @@ enum GCDAsyncSocketConfig
 	{
 		connectTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, socketQueue);
 		
-		dispatch_source_set_event_handler(connectTimer, ^{
-			NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+		dispatch_source_set_event_handler(connectTimer, ^{ @autoreleasepool {
 			
 			[self doConnectTimeout];
-			
-			[pool drain];
-		});
+		}});
 		
 		dispatch_source_t theConnectTimer = connectTimer;
 		dispatch_source_set_cancel_handler(connectTimer, ^{
@@ -2644,29 +2594,23 @@ enum GCDAsyncSocketConfig
 		{
 			id theDelegate = delegate;
 			
-			dispatch_async(delegateQueue, ^{
-				NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+			dispatch_async(delegateQueue, ^{ @autoreleasepool {
 				
 				[theDelegate socketDidDisconnect:self withError:error];
-				
-				[pool drain];
-			});
+			}});
 		}	
 	}
 }
 
 - (void)disconnect
 {
-	dispatch_block_t block = ^{
-		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	dispatch_block_t block = ^{ @autoreleasepool {
 		
 		if (flags & kSocketStarted)
 		{
 			[self closeWithError:nil];
 		}
-		
-		[pool drain];
-	};
+	}};
 	
 	// Synchronous disconnection, as documented in the header file
 	
@@ -2678,47 +2622,38 @@ enum GCDAsyncSocketConfig
 
 - (void)disconnectAfterReading
 {
-	dispatch_async(socketQueue, ^{
-		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	dispatch_async(socketQueue, ^{ @autoreleasepool {
 		
 		if (flags & kSocketStarted)
 		{
 			flags |= (kForbidReadsWrites | kDisconnectAfterReads);
 			[self maybeClose];
 		}
-		
-		[pool drain];
-	});
+	}});
 }
 
 - (void)disconnectAfterWriting
 {
-	dispatch_async(socketQueue, ^{
-		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	dispatch_async(socketQueue, ^{ @autoreleasepool {
 		
 		if (flags & kSocketStarted)
 		{
 			flags |= (kForbidReadsWrites | kDisconnectAfterWrites);
 			[self maybeClose];
 		}
-		
-		[pool drain];
-	});
+	}});
 }
 
 - (void)disconnectAfterReadingAndWriting
 {
-	dispatch_async(socketQueue, ^{
-		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	dispatch_async(socketQueue, ^{ @autoreleasepool {
 		
 		if (flags & kSocketStarted)
 		{
 			flags |= (kForbidReadsWrites | kDisconnectAfterReads | kDisconnectAfterWrites);
 			[self maybeClose];
 		}
-		
-		[pool drain];
-	});
+	}});
 }
 
 /**
@@ -2936,16 +2871,13 @@ enum GCDAsyncSocketConfig
 	{
 		__block NSString *result = nil;
 		
-		dispatch_sync(socketQueue, ^{
-			NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+		dispatch_sync(socketQueue, ^{ @autoreleasepool {
 			
 			if (socket4FD != SOCKET_NULL)
 				result = [[self connectedHostFromSocket4:socket4FD] retain];
 			else if (socket6FD != SOCKET_NULL)
 				result = [[self connectedHostFromSocket6:socket6FD] retain];
-			
-			[pool drain];
-		});
+		}});
 		
 		return [result autorelease];
 	}
@@ -2994,16 +2926,13 @@ enum GCDAsyncSocketConfig
 	{
 		__block NSString *result = nil;
 		
-		dispatch_sync(socketQueue, ^{
-			NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+		dispatch_sync(socketQueue, ^{ @autoreleasepool {
 			
 			if (socket4FD != SOCKET_NULL)
 				result = [[self localHostFromSocket4:socket4FD] retain];
 			else if (socket6FD != SOCKET_NULL)
 				result = [[self localHostFromSocket6:socket6FD] retain];
-			
-			[pool drain];
-		});
+		}});
 		
 		return [result autorelease];
 	}
@@ -3504,8 +3433,7 @@ enum GCDAsyncSocketConfig
 	
 	// Setup event handlers
 	
-	dispatch_source_set_event_handler(readSource, ^{
-		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	dispatch_source_set_event_handler(readSource, ^{ @autoreleasepool {
 		
 		LogVerbose(@"readEventBlock");
 		
@@ -3516,20 +3444,15 @@ enum GCDAsyncSocketConfig
 			[self doReadData];
 		else
 			[self doReadEOF];
-		
-		[pool drain];
-	});
+	}});
 	
-	dispatch_source_set_event_handler(writeSource, ^{
-		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	dispatch_source_set_event_handler(writeSource, ^{ @autoreleasepool {
 		
 		LogVerbose(@"writeEventBlock");
 		
 		flags |= kSocketCanAcceptBytes;
 		[self doWriteData];
-		
-		[pool drain];
-	});
+	}});
 	
 	// Setup cancel handlers
 	
@@ -3678,8 +3601,7 @@ enum GCDAsyncSocketConfig
 	                                                           terminator:nil
 	                                                                  tag:tag];
 	
-	dispatch_async(socketQueue, ^{
-		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	dispatch_async(socketQueue, ^{ @autoreleasepool {
 		
 		LogTrace();
 		
@@ -3688,9 +3610,7 @@ enum GCDAsyncSocketConfig
 			[readQueue addObject:packet];
 			[self maybeDequeueRead];
 		}
-		
-		[pool drain];
-	});
+	}});
 	
 	// Do not rely on the block being run in order to release the packet,
 	// as the queue might get released without the block completing.
@@ -3725,8 +3645,7 @@ enum GCDAsyncSocketConfig
 	                                                           terminator:nil
 	                                                                  tag:tag];
 	
-	dispatch_async(socketQueue, ^{
-		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	dispatch_async(socketQueue, ^{ @autoreleasepool {
 		
 		LogTrace();
 		
@@ -3735,9 +3654,7 @@ enum GCDAsyncSocketConfig
 			[readQueue addObject:packet];
 			[self maybeDequeueRead];
 		}
-		
-		[pool drain];
-	});
+	}});
 	
 	// Do not rely on the block being run in order to release the packet,
 	// as the queue might get released without the block completing.
@@ -3791,8 +3708,7 @@ enum GCDAsyncSocketConfig
 	                                                           terminator:data
 	                                                                  tag:tag];
 	
-	dispatch_async(socketQueue, ^{
-		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	dispatch_async(socketQueue, ^{ @autoreleasepool {
 		
 		LogTrace();
 		
@@ -3801,9 +3717,7 @@ enum GCDAsyncSocketConfig
 			[readQueue addObject:packet];
 			[self maybeDequeueRead];
 		}
-		
-		[pool drain];
-	});
+	}});
 	
 	// Do not rely on the block being run in order to release the packet,
 	// as the queue might get released without the block completing.
@@ -4062,6 +3976,7 @@ enum GCDAsyncSocketConfig
 	unsigned long estimatedBytesAvailable;
 	
 	#if TARGET_OS_IPHONE
+	{
 		if (flags & kSocketSecure)
 		{
 			// Relegated to using CFStream... :( Boo! Give us SecureTransport Apple!
@@ -4078,8 +3993,9 @@ enum GCDAsyncSocketConfig
 			hasBytesAvailable = (estimatedBytesAvailable > 0);
 			
 		}
+	}
 	#else
-		
+	{	
 		estimatedBytesAvailable = socketFDBytesAvailable;
 		
 		if (flags & kSocketSecure)
@@ -4119,7 +4035,7 @@ enum GCDAsyncSocketConfig
 		}
 	
 		hasBytesAvailable = (estimatedBytesAvailable > 0);
-	
+	}
 	#endif
 	
 	if ((hasBytesAvailable == NO) && ([partialReadBuffer length] == 0))
@@ -4147,12 +4063,12 @@ enum GCDAsyncSocketConfig
 		if (flags & kStartingWriteTLS)
 		{
 			#if !TARGET_OS_IPHONE
-			
+			{
 				// We are in the process of a SSL Handshake.
 				// We were waiting for incoming data which has just arrived.
 				
 				[self continueSSLHandshake];
-			
+			}
 			#endif
 		}
 		else
@@ -4171,10 +4087,8 @@ enum GCDAsyncSocketConfig
 		return;
 	}
 	
-	BOOL done        = NO;                                      // Completed read operation
-	BOOL waiting     = NO;                                      // Ran out of data, waiting for more
-	BOOL socketEOF   = (flags & kSocketHasReadEOF) ? YES : NO;  // Nothing more to via socket (end of file)
-	NSError *error   = nil;                                     // Error occured
+	BOOL done        = NO;  // Completed read operation
+	NSError *error   = nil; // Error occured
 	
 	NSUInteger totalBytesReadForCurrentRead = 0;
 	
@@ -4271,7 +4185,10 @@ enum GCDAsyncSocketConfig
 	// STEP 2 - READ FROM SOCKET
 	// 
 	
-	if (!done && !waiting && !socketEOF && !error && hasBytesAvailable)
+	BOOL socketEOF = (flags & kSocketHasReadEOF) ? YES : NO;  // Nothing more to via socket (end of file)
+	BOOL waiting   = !done && !error && !socketEOF && !hasBytesAvailable; // Ran out of data, waiting for more
+	
+	if (!done && !error && !socketEOF && !waiting && hasBytesAvailable)
 	{
 		NSAssert((partialReadBufferLength == 0), @"Invalid logic");
 		
@@ -4352,7 +4269,7 @@ enum GCDAsyncSocketConfig
 		if (flags & kSocketSecure)
 		{
 			#if TARGET_OS_IPHONE
-				
+			{	
 				CFIndex result = CFReadStreamRead(readStream, buffer, (CFIndex)bytesToRead);
 				LogVerbose(@"CFReadStreamRead(): result = %i", (int)result);
 				
@@ -4380,11 +4297,31 @@ enum GCDAsyncSocketConfig
 				// The actual number of bytes read was likely more due to the overhead of the encryption.
 				// So we reset our flag, and rely on the next callback to alert us of more data.
 				flags &= ~kSecureSocketHasBytesAvailable;
-				
+			}	
 			#else
+			{	
+				// The documentation from Apple states:
+				// 
+				//     "a read operation might return errSSLWouldBlock,
+				//      indicating that less data than requested was actually transferred"
+				// 
+				// However, starting around 10.7, the function will sometimes return noErr,
+				// even if it didn't read as much data as requested. So we need to watch out for that.
 				
-				OSStatus result = SSLRead(sslContext, buffer, (size_t)bytesToRead, &bytesRead);
-				LogVerbose(@"read from secure socket = %u", (unsigned)bytesRead);
+				OSStatus result;
+				do
+				{
+					void *loop_buffer = buffer + bytesRead;
+					size_t loop_bytesToRead = (size_t)bytesToRead - bytesRead;
+					size_t loop_bytesRead = 0;
+					
+					result = SSLRead(sslContext, loop_buffer, loop_bytesToRead, &loop_bytesRead);
+					LogVerbose(@"read from secure socket = %u", (unsigned)bytesRead);
+					
+					bytesRead += loop_bytesRead;
+					
+				} while ((result == noErr) && (bytesRead < bytesToRead));
+				
 				
 				if (result != noErr)
 				{
@@ -4408,7 +4345,7 @@ enum GCDAsyncSocketConfig
 				
 				// Do not modify socketFDBytesAvailable.
 				// It will be updated via the SSLReadFunction().
-				
+			}	
 			#endif
 		}
 		else
@@ -4614,7 +4551,7 @@ enum GCDAsyncSocketConfig
 			
 		} // if (bytesRead > 0)
 		
-	} // if (!done && !error && hasBytesAvailable)
+	} // if (!done && !error && !socketEOF && !waiting && hasBytesAvailable)
 	
 	
 	if (!done && currentRead->readLength == 0 && currentRead->term == nil)
@@ -4626,16 +4563,7 @@ enum GCDAsyncSocketConfig
 		done = (totalBytesReadForCurrentRead > 0);
 	}
 	
-	// Only one of the following can possibly be true:
-	// 
-	// - waiting
-	// - socketEOF
-	// - socketError
-	// - maxoutError
-	// 
-	// They may all be false.
-	// One of the above may be true even if done is true.
-	// This might be the case if we completed read type #1 via data from the prebuffer.
+	// Check to see if we're done, or if we've made progress
 	
 	if (done)
 	{
@@ -4655,13 +4583,10 @@ enum GCDAsyncSocketConfig
 			id theDelegate = delegate;
 			GCDAsyncReadPacket *theRead = currentRead;
 			
-			dispatch_async(delegateQueue, ^{
-				NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+			dispatch_async(delegateQueue, ^{ @autoreleasepool {
 				
 				[theDelegate socket:self didReadPartialDataOfLength:totalBytesReadForCurrentRead tag:theRead->tag];
-				
-				[pool drain];
-			});
+			}});
 		}
 	}
 	
@@ -4769,13 +4694,10 @@ enum GCDAsyncSocketConfig
 			{
 				id theDelegate = delegate;
 				
-				dispatch_async(delegateQueue, ^{
-					NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+				dispatch_async(delegateQueue, ^{ @autoreleasepool {
 					
 					[theDelegate socketDidCloseReadStream:self];
-					
-					[pool drain];
-				});
+				}});
 			}
 		}
 		else
@@ -4851,13 +4773,10 @@ enum GCDAsyncSocketConfig
 		id theDelegate = delegate;
 		GCDAsyncReadPacket *theRead = currentRead;
 		
-		dispatch_async(delegateQueue, ^{
-			NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+		dispatch_async(delegateQueue, ^{ @autoreleasepool {
 			
 			[theDelegate socket:self didReadData:result withTag:theRead->tag];
-			
-			[pool drain];
-		});
+		}});
 	}
 	
 	[self endCurrentRead];
@@ -4881,11 +4800,10 @@ enum GCDAsyncSocketConfig
 	{
 		readTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, socketQueue);
 		
-		dispatch_source_set_event_handler(readTimer, ^{
-			NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+		dispatch_source_set_event_handler(readTimer, ^{ @autoreleasepool {
+			
 			[self doReadTimeout];
-			[pool drain];
-		});
+		}});
 		
 		dispatch_source_t theReadTimer = readTimer;
 		dispatch_source_set_cancel_handler(readTimer, ^{
@@ -4914,8 +4832,7 @@ enum GCDAsyncSocketConfig
 		id theDelegate = delegate;
 		GCDAsyncReadPacket *theRead = currentRead;
 		
-		dispatch_async(delegateQueue, ^{
-			NSAutoreleasePool *delegatePool = [[NSAutoreleasePool alloc] init];
+		dispatch_async(delegateQueue, ^{ @autoreleasepool {
 			
 			NSTimeInterval timeoutExtension = 0.0;
 			
@@ -4923,16 +4840,11 @@ enum GCDAsyncSocketConfig
 			                                                             elapsed:theRead->timeout
 			                                                           bytesDone:theRead->bytesDone];
 			
-			dispatch_async(socketQueue, ^{
-				NSAutoreleasePool *callbackPool = [[NSAutoreleasePool alloc] init];
+			dispatch_async(socketQueue, ^{ @autoreleasepool {
 				
 				[self doReadTimeoutWithExtension:timeoutExtension];
-				
-				[callbackPool drain];
-			});
-			
-			[delegatePool drain];
-		});
+			}});
+		}});
 	}
 	else
 	{
@@ -4975,8 +4887,7 @@ enum GCDAsyncSocketConfig
 	
 	GCDAsyncWritePacket *packet = [[GCDAsyncWritePacket alloc] initWithData:data timeout:timeout tag:tag];
 	
-	dispatch_async(socketQueue, ^{
-		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	dispatch_async(socketQueue, ^{ @autoreleasepool {
 		
 		LogTrace();
 		
@@ -4985,9 +4896,7 @@ enum GCDAsyncSocketConfig
 			[writeQueue addObject:packet];
 			[self maybeDequeueWrite];
 		}
-		
-		[pool drain];
-	});
+	}});
 	
 	// Do not rely on the block being run in order to release the packet,
 	// as the queue might get released without the block completing.
@@ -5406,13 +5315,10 @@ enum GCDAsyncSocketConfig
 				id theDelegate = delegate;
 				GCDAsyncWritePacket *theWrite = currentWrite;
 				
-				dispatch_async(delegateQueue, ^{
-					NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+				dispatch_async(delegateQueue, ^{ @autoreleasepool {
 					
 					[theDelegate socket:self didWritePartialDataOfLength:bytesWritten tag:theWrite->tag];
-					
-					[pool drain];
-				});
+				}});
 			}
 		}
 	}
@@ -5439,13 +5345,10 @@ enum GCDAsyncSocketConfig
 		id theDelegate = delegate;
 		GCDAsyncWritePacket *theWrite = currentWrite;
 		
-		dispatch_async(delegateQueue, ^{
-			NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+		dispatch_async(delegateQueue, ^{ @autoreleasepool {
 			
 			[theDelegate socket:self didWriteDataWithTag:theWrite->tag];
-			
-			[pool drain];
-		});
+		}});
 	}
 	
 	[self endCurrentWrite];
@@ -5469,13 +5372,10 @@ enum GCDAsyncSocketConfig
 	{
 		writeTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, socketQueue);
 		
-		dispatch_source_set_event_handler(writeTimer, ^{
-			NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+		dispatch_source_set_event_handler(writeTimer, ^{ @autoreleasepool {
 			
 			[self doWriteTimeout];
-			
-			[pool drain];
-		});
+		}});
 		
 		dispatch_source_t theWriteTimer = writeTimer;
 		dispatch_source_set_cancel_handler(writeTimer, ^{
@@ -5504,8 +5404,7 @@ enum GCDAsyncSocketConfig
 		id theDelegate = delegate;
 		GCDAsyncWritePacket *theWrite = currentWrite;
 		
-		dispatch_async(delegateQueue, ^{
-			NSAutoreleasePool *delegatePool = [[NSAutoreleasePool alloc] init];
+		dispatch_async(delegateQueue, ^{ @autoreleasepool {
 			
 			NSTimeInterval timeoutExtension = 0.0;
 			
@@ -5513,16 +5412,11 @@ enum GCDAsyncSocketConfig
 			                                                              elapsed:theWrite->timeout
 			                                                            bytesDone:theWrite->bytesDone];
 			
-			dispatch_async(socketQueue, ^{
-				NSAutoreleasePool *callbackPool = [[NSAutoreleasePool alloc] init];
+			dispatch_async(socketQueue, ^{ @autoreleasepool {
 				
 				[self doWriteTimeoutWithExtension:timeoutExtension];
-				
-				[callbackPool drain];
-			});
-			
-			[delegatePool drain];
-		});
+			}});
+		}});
 	}
 	else
 	{
@@ -5578,8 +5472,7 @@ enum GCDAsyncSocketConfig
 	
 	GCDAsyncSpecialPacket *packet = [[GCDAsyncSpecialPacket alloc] initWithTLSSettings:tlsSettings];
 	
-	dispatch_async(socketQueue, ^{
-		NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	dispatch_async(socketQueue, ^{ @autoreleasepool {
 		
 		if ((flags & kSocketStarted) && !(flags & kQueuedTLS) && !(flags & kForbidReadsWrites))
 		{
@@ -5591,9 +5484,7 @@ enum GCDAsyncSocketConfig
 			[self maybeDequeueRead];
 			[self maybeDequeueWrite];
 		}
-		
-		[pool drain];
-	});
+	}});
 	
 	[packet release];
 }
@@ -6135,13 +6026,10 @@ static OSStatus SSLWriteFunction(SSLConnectionRef connection, const void *data, 
 		{
 			id theDelegate = delegate;
 			
-			dispatch_async(delegateQueue, ^{
-				NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+			dispatch_async(delegateQueue, ^{ @autoreleasepool {
 				
 				[theDelegate socketDidSecure:self];
-				
-				[pool drain];
-			});
+			}});
 		}
 		
 		[self endCurrentRead];
@@ -6187,13 +6075,10 @@ static OSStatus SSLWriteFunction(SSLConnectionRef connection, const void *data, 
 		{
 			id theDelegate = delegate;
 		
-			dispatch_async(delegateQueue, ^{
-				NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+			dispatch_async(delegateQueue, ^{ @autoreleasepool {
 				
 				[theDelegate socketDidSecure:self];
-				
-				[pool drain];
-			});
+			}});
 		}
 		
 		[self endCurrentRead];
@@ -6331,10 +6216,8 @@ static OSStatus SSLWriteFunction(SSLConnectionRef connection, const void *data, 
 	});
 }
 
-+ (void)listenerThread
++ (void)listenerThread { @autoreleasepool
 {
-	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	
 	LogInfo(@"ListenerThread: Started");
 	
 	// We can't run the run loop unless it has an associated input source or a timer.
@@ -6348,9 +6231,7 @@ static OSStatus SSLWriteFunction(SSLConnectionRef connection, const void *data, 
 	[[NSRunLoop currentRunLoop] run];
 	
 	LogInfo(@"ListenerThread: Stopped");
-	
-	[pool drain];
-}
+}}
 
 + (void)addStreamListener:(GCDAsyncSocket *)asyncSocket
 {
@@ -6388,14 +6269,12 @@ static void CFReadStreamCallback (CFReadStreamRef stream, CFStreamEventType type
 	{
 		case kCFStreamEventHasBytesAvailable:
 		{
-			dispatch_async(asyncSocket->socketQueue, ^{
+			dispatch_async(asyncSocket->socketQueue, ^{ @autoreleasepool {
 				
 				LogCVerbose(@"CFReadStreamCallback - HasBytesAvailable");
 				
 				if (asyncSocket->readStream != stream)
 					return_from_block;
-				
-				NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 				
 				if ((asyncSocket->flags & kStartingReadTLS) && (asyncSocket->flags & kStartingWriteTLS))
 				{
@@ -6413,9 +6292,7 @@ static void CFReadStreamCallback (CFReadStreamRef stream, CFStreamEventType type
 					asyncSocket->flags |= kSecureSocketHasBytesAvailable;
 					[asyncSocket doReadData];
 				}
-				
-				[pool drain];
-			});
+			}});
 			
 			break;
 		}
@@ -6427,14 +6304,12 @@ static void CFReadStreamCallback (CFReadStreamRef stream, CFStreamEventType type
 				error = [[asyncSocket connectionClosedError] retain];
 			}
 			
-			dispatch_async(asyncSocket->socketQueue, ^{
+			dispatch_async(asyncSocket->socketQueue, ^{ @autoreleasepool {
 				
 				LogCVerbose(@"CFReadStreamCallback - Other");
 				
 				if (asyncSocket->readStream != stream)
 					return_from_block;
-				
-				NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 				
 				if ((asyncSocket->flags & kStartingReadTLS) && (asyncSocket->flags & kStartingWriteTLS))
 				{
@@ -6444,9 +6319,7 @@ static void CFReadStreamCallback (CFReadStreamRef stream, CFStreamEventType type
 				{
 					[asyncSocket closeWithError:error];
 				}
-				
-				[pool drain];
-			});
+			}});
 			
 			[error release];
 			break;
@@ -6464,14 +6337,12 @@ static void CFWriteStreamCallback (CFWriteStreamRef stream, CFStreamEventType ty
 	{
 		case kCFStreamEventCanAcceptBytes:
 		{
-			dispatch_async(asyncSocket->socketQueue, ^{
+			dispatch_async(asyncSocket->socketQueue, ^{ @autoreleasepool {
 				
 				LogCVerbose(@"CFWriteStreamCallback - CanAcceptBytes");
 				
 				if (asyncSocket->writeStream != stream)
 					return_from_block;
-				
-				NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 				
 				if ((asyncSocket->flags & kStartingReadTLS) && (asyncSocket->flags & kStartingWriteTLS))
 				{
@@ -6489,9 +6360,7 @@ static void CFWriteStreamCallback (CFWriteStreamRef stream, CFStreamEventType ty
 					asyncSocket->flags |= kSocketCanAcceptBytes;
 					[asyncSocket doWriteData];
 				}
-				
-				[pool drain];
-			});
+			}});
 			
 			break;
 		}
@@ -6503,14 +6372,12 @@ static void CFWriteStreamCallback (CFWriteStreamRef stream, CFStreamEventType ty
 				error = [[asyncSocket connectionClosedError] retain];
 			}
 			
-			dispatch_async(asyncSocket->socketQueue, ^{
+			dispatch_async(asyncSocket->socketQueue, ^{ @autoreleasepool {
 				
 				LogCVerbose(@"CFWriteStreamCallback - Other");
 				
 				if (asyncSocket->writeStream != stream)
 					return_from_block;
-				
-				NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 				
 				if ((asyncSocket->flags & kStartingReadTLS) && (asyncSocket->flags & kStartingWriteTLS))
 				{
@@ -6520,9 +6387,7 @@ static void CFWriteStreamCallback (CFWriteStreamRef stream, CFStreamEventType ty
 				{
 					[asyncSocket closeWithError:error];
 				}
-				
-				[pool drain];
-			});
+			}});
 			
 			[error release];
 			break;
