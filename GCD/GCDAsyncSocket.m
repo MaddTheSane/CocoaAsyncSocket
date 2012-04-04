@@ -28,7 +28,7 @@
 #import <unistd.h>
 
 
-#if GROWLHELPERAPP
+#if 0
 
 // Logging Enabled - See log level below
 
@@ -817,7 +817,7 @@ enum GCDAsyncSocketConfig
 {
 	if((self = [super init]))
 	{
-#if GROWLHELPERAPP
+#if 0
         DDFileLogger *fileLogger = [[DDFileLogger alloc] init];
         
         fileLogger.maximumFileSize = 1024 * 1024 * 50;  //  50 MB
@@ -881,7 +881,7 @@ enum GCDAsyncSocketConfig
 			[self closeWithError:nil];
 		});
 	}
-	
+	    
 	delegate = nil;
 	if (delegateQueue)
 		dispatch_release(delegateQueue);
