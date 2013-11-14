@@ -874,7 +874,7 @@ enum GCDAsyncSocketConfig
 		
 		IsOnSocketQueueOrTargetQueueKey = &IsOnSocketQueueOrTargetQueueKey;
 		
-		void *nonNullUnusedPointer = (__bridge void *)self;
+		void *nonNullUnusedPointer = (void *)self;
 		dispatch_queue_set_specific(socketQueue, IsOnSocketQueueOrTargetQueueKey, nonNullUnusedPointer, NULL);
 		
 		readQueue = [[NSMutableArray alloc] initWithCapacity:5];
@@ -6677,7 +6677,7 @@ static void CFWriteStreamCallback (CFWriteStreamRef stream, CFStreamEventType ty
 **/
 - (void)markSocketQueueTargetQueue:(dispatch_queue_t)socketNewTargetQueue
 {
-	void *nonNullUnusedPointer = (__bridge void *)self;
+	void *nonNullUnusedPointer = (void *)self;
 	dispatch_queue_set_specific(socketNewTargetQueue, IsOnSocketQueueOrTargetQueueKey, nonNullUnusedPointer, NULL);
 }
 
