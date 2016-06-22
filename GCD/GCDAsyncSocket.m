@@ -5861,6 +5861,8 @@ static OSStatus SSLWriteFunction(SSLConnectionRef connection, const void *data, 
 
 - (void)maybeStartTLS
 {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 	LogTrace();
 	
 	// We can't start TLS until:
@@ -6114,6 +6116,7 @@ static OSStatus SSLWriteFunction(SSLConnectionRef connection, const void *data, 
 		
 		[self continueSSLHandshake];
 	}
+#pragma clang diagnostic pop
 }
 
 - (void)continueSSLHandshake
