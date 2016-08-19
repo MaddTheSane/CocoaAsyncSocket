@@ -129,7 +129,7 @@ NSString *const GCDAsyncSocketSSLCipherSuites = @"GCDAsyncSocketSSLCipherSuites"
 NSString *const GCDAsyncSocketSSLDiffieHellmanParameters = @"GCDAsyncSocketSSLDiffieHellmanParameters";
 #endif
 
-enum GCDAsyncSocketFlags
+typedef NS_OPTIONS(uint32_t, GCDAsyncSocketFlags)
 {
 	kSocketStarted                 = 1 <<  0,  // If set, socket has been started (accepting/connecting)
 	kConnected                     = 1 <<  1,  // If set, the socket is connected
@@ -155,7 +155,7 @@ enum GCDAsyncSocketFlags
 #endif
 };
 
-enum GCDAsyncSocketConfig
+typedef NS_OPTIONS(uint16_t, GCDAsyncSocketConfig)
 {
 	kIPv4Disabled              = 1 << 0,  // If set, IPv4 is disabled
 	kIPv6Disabled              = 1 << 1,  // If set, IPv6 is disabled
@@ -864,8 +864,8 @@ enum GCDAsyncSocketConfig
 
 @implementation GCDAsyncSocket
 {
-	uint32_t flags;
-	uint16_t config;
+	GCDAsyncSocketFlags flags;
+	GCDAsyncSocketConfig config;
 	
 	__weak id<GCDAsyncSocketDelegate> delegate;
 	dispatch_queue_t delegateQueue;
