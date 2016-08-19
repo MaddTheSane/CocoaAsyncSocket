@@ -50,15 +50,15 @@ extern NSString *const GCDAsyncSocketSSLDiffieHellmanParameters;
 
 
 typedef NS_ENUM(NSInteger, GCDAsyncSocketError) {
-	GCDAsyncSocketNoError = 0,           // Never used
-	GCDAsyncSocketBadConfigError,        // Invalid configuration
-	GCDAsyncSocketBadParamError,         // Invalid parameter was passed
-	GCDAsyncSocketConnectTimeoutError,   // A connect operation timed out
-	GCDAsyncSocketReadTimeoutError,      // A read operation timed out
-	GCDAsyncSocketWriteTimeoutError,     // A write operation timed out
-	GCDAsyncSocketReadMaxedOutError,     // Reached set maxLength without completing
-	GCDAsyncSocketClosedError,           // The remote peer closed the connection
-	GCDAsyncSocketOtherError,            // Description provided in userInfo
+	GCDAsyncSocketNoError = 0,           ///< Never used
+	GCDAsyncSocketBadConfigError,        ///< Invalid configuration
+	GCDAsyncSocketBadParamError,         ///< Invalid parameter was passed
+	GCDAsyncSocketConnectTimeoutError,   ///< A connect operation timed out
+	GCDAsyncSocketReadTimeoutError,      ///< A read operation timed out
+	GCDAsyncSocketWriteTimeoutError,     ///< A write operation timed out
+	GCDAsyncSocketReadMaxedOutError,     ///< Reached set maxLength without completing
+	GCDAsyncSocketClosedError,           ///< The remote peer closed the connection
+	GCDAsyncSocketOtherError,            ///< Description provided in userInfo
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
