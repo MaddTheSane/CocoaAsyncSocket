@@ -108,7 +108,7 @@ NSString *const GCDAsyncUdpSocketErrorDomain = @"GCDAsyncUdpSocketErrorDomain";
 NSString *const GCDAsyncUdpSocketQueueName = @"GCDAsyncUdpSocket";
 NSString *const GCDAsyncUdpSocketThreadName = @"GCDAsyncUdpSocket-CFStream";
 
-enum GCDAsyncUdpSocketFlags
+typedef NS_OPTIONS(uint32_t, GCDAsyncUdpSocketFlags)
 {
 	kDidCreateSockets        = 1 <<  0,  // If set, the sockets have been created.
 	kDidBind                 = 1 <<  1,  // If set, bind has been called.
@@ -132,7 +132,7 @@ enum GCDAsyncUdpSocketFlags
 #endif
 };
 
-enum GCDAsyncUdpSocketConfig
+typedef NS_OPTIONS(uint16_t, GCDAsyncUdpSocketConfig)
 {
 	kIPv4Disabled  = 1 << 0,  // If set, IPv4 is disabled
 	kIPv6Disabled  = 1 << 1,  // If set, IPv6 is disabled
@@ -161,8 +161,8 @@ enum GCDAsyncUdpSocketConfig
 	dispatch_queue_t sendFilterQueue;
 	BOOL sendFilterAsync;
 	
-	uint32_t flags;
-	uint16_t config;
+	GCDAsyncUdpSocketFlags flags;
+	GCDAsyncUdpSocketConfig config;
 	
 	uint16_t max4ReceiveSize;
 	uint32_t max6ReceiveSize;
