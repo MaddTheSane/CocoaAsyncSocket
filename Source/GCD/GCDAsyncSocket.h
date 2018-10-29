@@ -23,8 +23,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-extern NSString *const GCDAsyncSocketException;
-extern NSString *const GCDAsyncSocketErrorDomain;
+extern NSExceptionName const GCDAsyncSocketException;
+extern NSErrorDomain const GCDAsyncSocketErrorDomain;
 
 extern NSString *const GCDAsyncSocketQueueName;
 extern NSString *const GCDAsyncSocketThreadName;

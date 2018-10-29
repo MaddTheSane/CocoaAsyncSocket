@@ -14,8 +14,8 @@
 #import <Availability.h>
 
 NS_ASSUME_NONNULL_BEGIN
-extern NSString *const GCDAsyncUdpSocketException;
-extern NSString *const GCDAsyncUdpSocketErrorDomain;
+extern NSExceptionName const GCDAsyncUdpSocketException;
+extern NSErrorDomain const GCDAsyncUdpSocketErrorDomain;
 
 extern NSString *const GCDAsyncUdpSocketQueueName;
 extern NSString *const GCDAsyncUdpSocketThreadName;
