@@ -86,7 +86,7 @@
 				6CD990151B77868C0011A685 /* Info.plist */,
 				6C55C7D11B7838B1006A7440 /* CocoaAsyncSocket.h */,
 			);
-			path = CocoaAsyncSocket;
+			name = CocoaAsyncSocket;
 			sourceTree = "<group>";
 		};
 		6CD9902A1B7789220011A685 /* GCD */ = {
