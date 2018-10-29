@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name     = 'CocoaAsyncSocket'
-  s.version  = '7.5.1'
+  s.version  = '7.6.3'
   s.license  = { :type => 'public domain', :text => <<-LICENSE
 Public Domain License
 
@@ -24,22 +24,13 @@ Updated and maintained by Deusty LLC and the Apple development community.
                   'version, but is designed specifically for UDP. This includes queued non-blocking send/receive operations, full ' \
                   'delegate support, run-loop based, self-contained class, and support for IPv4 and IPv6.'
 
-  s.default_subspec = 'GCD'
-
-  s.subspec 'GCD' do |ss|
-    ss.source_files = 'Source/GCD/*.{h,m}'
-  end
-
-  s.subspec 'RunLoop' do |ss|
-    ss.source_files = 'Source/RunLoop/*.{h,m}'
-  end
+  s.source_files = 'Source/GCD/*.{h,m}'
 
   s.requires_arc = true
 
-  # dispatch_queue_set_specific() is available in OS X v10.7+ and iOS 5.0+
   s.ios.deployment_target = '5.0'
   s.tvos.deployment_target = '9.0'
-  s.osx.deployment_target = '10.7'
+  s.osx.deployment_target = '10.8'
 
   s.ios.frameworks = 'CFNetwork', 'Security'
   s.tvos.frameworks = 'CFNetwork', 'Security'
