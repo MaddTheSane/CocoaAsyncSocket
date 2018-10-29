@@ -185,10 +185,14 @@ typedef BOOL (^GCDAsyncUdpSocketSendFilterBlock)(NSData *data, NSData *address, 
 
 #pragma mark Configuration
 
-@property (nullable, weak) id <GCDAsyncUdpSocketDelegate> delegate;
+@property (atomic, nullable, weak) id <GCDAsyncUdpSocketDelegate> delegate;
 - (void)synchronouslySetDelegate:(nullable id <GCDAsyncUdpSocketDelegate>)delegate;
 
-@property (nullable) dispatch_queue_t delegateQueue;
+#if OS_OBJECT_USE_OBJC
+@property (atomic, strong, readwrite, nullable) dispatch_queue_t delegateQueue;
+#else
+@property (atomic, assign, readwrite, nullable) dispatch_queue_t delegateQueue;
+#endif
 - (void)synchronouslySetDelegateQueue:(nullable dispatch_queue_t)delegateQueue;
 
 - (void)getDelegate:(id <GCDAsyncUdpSocketDelegate> __nullable * __nullable)delegatePtr delegateQueue:(dispatch_queue_t __nullable * __nullable)delegateQueuePtr;
@@ -218,7 +222,7 @@ typedef BOOL (^GCDAsyncUdpSocketSendFilterBlock)(NSData *data, NSData *address, 
 
 @property (readonly, getter=isIPv4Preferred) BOOL IPv4Preferred;
 @property (readonly, getter=isIPv6Preferred) BOOL IPv6Preferred;
-- (BOOL)isIPVersionNeutral;
+@property (readonly, getter=isIPVersionNeutral) BOOL IPVersionNeutral;
 
 - (void)setPreferIPv4;
 - (void)setPreferIPv6;
@@ -240,11 +244,8 @@ typedef BOOL (^GCDAsyncUdpSocketSendFilterBlock)(NSData *data, NSData *address, 
  * If you set the buffer size too small, the sockets API in the OS will silently discard
  * any extra data, and you will not be notified of the error.
 **/
-- (uint16_t)maxReceiveIPv4BufferSize;
-- (void)setMaxReceiveIPv4BufferSize:(uint16_t)max;
-
-- (uint32_t)maxReceiveIPv6BufferSize;
-- (void)setMaxReceiveIPv6BufferSize:(uint32_t)max;
+@property uint16_t maxReceiveIPv4BufferSize;
+@property uint16_t maxReceiveIPv6BufferSize;
 
 /**
  * Gets/Sets the maximum size of the buffer that will be allocated for send operations.
@@ -258,8 +259,7 @@ typedef BOOL (^GCDAsyncUdpSocketSendFilterBlock)(NSData *data, NSData *address, 
  * You must set it before the sockt is created otherwise it won't work.
  *
  **/
-- (uint16_t)maxSendBufferSize;
-- (void)setMaxSendBufferSize:(uint16_t)max;
+@property uint16_t maxSendBufferSize;
 
 /**
  * User data allows you to associate arbitrary information with the socket.
@@ -278,17 +278,17 @@ typedef BOOL (^GCDAsyncUdpSocketSendFilterBlock)(NSData *data, NSData *address, 
  * Note: Address info may not be available until after the socket has been binded, connected
  * or until after data has been sent.
 **/
-- (nullable NSData *)localAddress;
-- (nullable NSString *)localHost;
-- (uint16_t)localPort;
+@property (readonly, nullable) NSData *localAddress;
+@property (readonly, nullable) NSString *localHost;
+@property (readonly) uint16_t localPort;
 
-- (nullable NSData *)localAddress_IPv4;
-- (nullable NSString *)localHost_IPv4;
-- (uint16_t)localPort_IPv4;
+@property (readonly, nullable) NSData *localAddress_IPv4;
+@property (readonly, nullable) NSString *localHost_IPv4;
+@property (readonly) uint16_t localPort_IPv4;
 
-- (nullable NSData *)localAddress_IPv6;
-- (nullable NSString *)localHost_IPv6;
-- (uint16_t)localPort_IPv6;
+@property (readonly, nullable) NSData *localAddress_IPv6;
+@property (readonly, nullable) NSString *localHost_IPv6;
+@property (readonly) uint16_t localPort_IPv6;
 
 /**
  * Returns the remote address info for the socket.
@@ -300,22 +300,22 @@ typedef BOOL (^GCDAsyncUdpSocketSendFilterBlock)(NSData *data, NSData *address, 
  * will not be available unless the socket is explicitly connected to a remote host/port.
  * If the socket is not connected, these methods will return nil / 0.
 **/
-- (nullable NSData *)connectedAddress;
-- (nullable NSString *)connectedHost;
-- (uint16_t)connectedPort;
+@property (readonly, nullable) NSData *connectedAddress;
+@property (readonly, nullable) NSString *connectedHost;
+@property (readonly) uint16_t connectedPort;
 
 /**
  * Returns whether or not this socket has been connected to a single host.
  * By design, UDP is a connectionless protocol, and connecting is not needed.
  * If connected, the socket will only be able to send/receive data to/from the connected host.
 **/
-- (BOOL)isConnected;
+@property (readonly, getter=isConnected) BOOL connected;
 
 /**
  * Returns whether or not this socket has been closed.
  * The only way a socket can be closed is if you explicitly call one of the close methods.
 **/
-- (BOOL)isClosed;
+@property (readonly, getter=isClosed) BOOL closed;
 
 /**
  * Returns whether or not this socket is IPv4.
@@ -325,7 +325,7 @@ typedef BOOL (^GCDAsyncUdpSocketSendFilterBlock)(NSData *data, NSData *address, 
  * - The socket is explicitly bound to an IPv6 address
  * - The socket is connected to an IPv6 address
 **/
-- (BOOL)isIPv4;
+@property (readonly) BOOL isIPv4;
 
 /**
  * Returns whether or not this socket is IPv6.
@@ -338,7 +338,7 @@ typedef BOOL (^GCDAsyncUdpSocketSendFilterBlock)(NSData *data, NSData *address, 
  * This method will also return false on platforms that do not support IPv6.
  * Note: The iPhone does not currently support IPv6.
 **/
-- (BOOL)isIPv6;
+@property (readonly) BOOL isIPv6;
 
 #pragma mark Binding
 
