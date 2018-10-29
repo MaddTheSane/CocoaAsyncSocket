@@ -21,12 +21,12 @@ extern NSString *const GCDAsyncUdpSocketQueueName;
 extern NSString *const GCDAsyncUdpSocketThreadName;
 
 typedef NS_ERROR_ENUM(GCDAsyncUdpSocketErrorDomain, GCDAsyncUdpSocketError) {
-	GCDAsyncUdpSocketNoError = 0,          // Never used
-	GCDAsyncUdpSocketBadConfigError,       // Invalid configuration
-	GCDAsyncUdpSocketBadParamError,        // Invalid parameter was passed
-	GCDAsyncUdpSocketSendTimeoutError,     // A send operation timed out
-	GCDAsyncUdpSocketClosedError,          // The socket was closed
-	GCDAsyncUdpSocketOtherError,           // Description provided in userInfo
+	GCDAsyncUdpSocketNoError = 0,          //!< Never used
+	GCDAsyncUdpSocketBadConfigError,       //!< Invalid configuration
+	GCDAsyncUdpSocketBadParamError,        //!< Invalid parameter was passed
+	GCDAsyncUdpSocketSendTimeoutError,     //!< A send operation timed out
+	GCDAsyncUdpSocketClosedError,          //!< The socket was closed
+	GCDAsyncUdpSocketOtherError,           //!< Description provided in userInfo
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -185,12 +185,10 @@ typedef BOOL (^GCDAsyncUdpSocketSendFilterBlock)(NSData *data, NSData *address, 
 
 #pragma mark Configuration
 
-- (nullable id <GCDAsyncUdpSocketDelegate>)delegate;
-- (void)setDelegate:(nullable id <GCDAsyncUdpSocketDelegate>)delegate;
+@property (nullable, weak) id <GCDAsyncUdpSocketDelegate> delegate;
 - (void)synchronouslySetDelegate:(nullable id <GCDAsyncUdpSocketDelegate>)delegate;
 
-- (nullable dispatch_queue_t)delegateQueue;
-- (void)setDelegateQueue:(nullable dispatch_queue_t)delegateQueue;
+@property (nullable) dispatch_queue_t delegateQueue;
 - (void)synchronouslySetDelegateQueue:(nullable dispatch_queue_t)delegateQueue;
 
 - (void)getDelegate:(id <GCDAsyncUdpSocketDelegate> __nullable * __nullable)delegatePtr delegateQueue:(dispatch_queue_t __nullable * __nullable)delegateQueuePtr;
@@ -215,14 +213,11 @@ typedef BOOL (^GCDAsyncUdpSocketSendFilterBlock)(NSData *data, NSData *address, 
  * Starting with Mac OS X 10.7 Lion and iOS 5, the default IP preference is neutral.
  * On prior systems the default IP preference is IPv4.
  **/
-- (BOOL)isIPv4Enabled;
-- (void)setIPv4Enabled:(BOOL)flag;
+@property (nonatomic, getter=isIPv4Enabled) BOOL IPv4Enabled;
+@property (nonatomic, getter=isIPv6Enabled) BOOL IPv6Enabled;
 
-- (BOOL)isIPv6Enabled;
-- (void)setIPv6Enabled:(BOOL)flag;
-
-- (BOOL)isIPv4Preferred;
-- (BOOL)isIPv6Preferred;
+@property (readonly, getter=isIPv4Preferred) BOOL IPv4Preferred;
+@property (readonly, getter=isIPv6Preferred) BOOL IPv6Preferred;
 - (BOOL)isIPVersionNeutral;
 
 - (void)setPreferIPv4;
@@ -270,8 +265,7 @@ typedef BOOL (^GCDAsyncUdpSocketSendFilterBlock)(NSData *data, NSData *address, 
  * User data allows you to associate arbitrary information with the socket.
  * This data is not used internally in any way.
 **/
-- (nullable id)userData;
-- (void)setUserData:(nullable id)arbitraryUserData;
+@property (strong, nullable) id userData;
 
 #pragma mark Diagnostics
 
