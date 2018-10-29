@@ -245,7 +245,7 @@ typedef BOOL (^GCDAsyncUdpSocketSendFilterBlock)(NSData *data, NSData *address, 
  * any extra data, and you will not be notified of the error.
 **/
 @property uint16_t maxReceiveIPv4BufferSize;
-@property uint16_t maxReceiveIPv6BufferSize;
+@property uint32_t maxReceiveIPv6BufferSize;
 
 /**
  * Gets/Sets the maximum size of the buffer that will be allocated for send operations.
